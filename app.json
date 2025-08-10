@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Impostor",
+    "slug": "impostor",
+    "scheme": "impostor",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android", "web"],
+    "ios": { "supportsTablet": true },
+    "android": {},
+    "web": { "name": "🕵️ Juego de Impostores", "bundler": "metro" }
+  }
+}
+
