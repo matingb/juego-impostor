@@ -1,5 +1,27 @@
-import React, { useMemo, useState } from 'react';
-import { Platform, SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
+"use client";
+
+import React, { useCallback, useMemo, useState } from "react";
+import {
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { AppHeader } from "./components/AppHeader";
+import { Card } from "./components/Card";
+import { PrimaryButton } from "./components/PrimaryButton";
+import { Icon } from "./components/Icon";
+import { SetupCards } from "./components/SetupCards";
+import { RoleCard } from "./components/RoleCard";
+import { VoteScreen } from "./screens/VoteScreen";
+import { RevealScreen } from "./screens/RevealScreen";
+import { WinScreen } from "./screens/WinScreen";
+import { Ionicons } from "@expo/vector-icons";
+import { colors } from "./theme";
 
 function clampImpostors(totalPlayers: number, impostors: number): number {
   if (Number.isNaN(impostors) || impostors < 1) return 1;
@@ -9,41 +31,55 @@ function clampImpostors(totalPlayers: number, impostors: number): number {
 
 export default function App() {
   const [totalPlayers, setTotalPlayers] = useState<number>(5);
-  const [totalPlayersText, setTotalPlayersText] = useState<string>('5');
+  const [totalPlayersText, setTotalPlayersText] = useState<string>("5");
   const [totalImpostors, setTotalImpostors] = useState<number>(1);
-  const [totalImpostorsText, setTotalImpostorsText] = useState<string>('1');
+  const [totalImpostorsText, setTotalImpostorsText] = useState<string>("1");
   const [playerNames, setPlayerNames] = useState<string[]>([
-    'Ana',
-    'Bruno',
-    'Carla',
-    'Diego',
-    'Elena',
+    "Ana",
+    "Bruno",
+    "Carla",
+    "Diego",
+    "Elena",
   ]);
   const [wordListText, setWordListText] = useState<string>(
-    'Playa\nMontaña\nBosque\nCiudad\nEscuela\nHospital\nBiblioteca\nRestaurante'
+    "Playa\nMontaña\nBosque\nCiudad\nEscuela\nHospital\nBiblioteca\nRestaurante"
   );
 
-  const [screen, setScreen] = useState<'setup' | 'blank' | 'role' | 'end'>('setup');
+  const [screen, setScreen] = useState<
+    "setup" | "blank" | "role" | "vote" | "reveal" | "winImpostors" | "winCrew"
+  >("setup");
   const [currentPlayer, setCurrentPlayer] = useState<number>(0);
   const [impostorIndexes, setImpostorIndexes] = useState<number[]>([]);
-  const [keyword, setKeyword] = useState<string>('');
+  const [keyword, setKeyword] = useState<string>("");
   const [remainingWords, setRemainingWords] = useState<string[]>([]);
+  const [selectedPlayerIndex, setSelectedPlayerIndex] = useState<number | null>(
+    null
+  );
+  const [lastEliminatedIndex, setLastEliminatedIndex] = useState<number | null>(
+    null
+  );
+  const [alivePlayers, setAlivePlayers] = useState<boolean[]>([]);
 
-  const screenContainerStyle = useMemo(() => ({
-    flex: 1,
-    backgroundColor: '#222',
-  }), []);
+  const screenContainerStyle = useMemo(
+    () => ({
+      flex: 1,
+      backgroundColor: "#222",
+    }),
+    []
+  );
 
   const words = useMemo(() => {
     return wordListText
-      .split('\n')
+      .split("\n")
       .map((w) => w.trim())
       .filter((w) => w.length > 0);
   }, [wordListText]);
 
-
   function updateImpostorsSafe(nextImpostors: number) {
-    const impostors = clampImpostors(totalPlayers, Math.floor(nextImpostors || 1));
+    const impostors = clampImpostors(
+      totalPlayers,
+      Math.floor(nextImpostors || 1)
+    );
     setTotalImpostors(impostors);
     setTotalImpostorsText(String(impostors));
   }
@@ -61,7 +97,7 @@ export default function App() {
       // si faltan, completar con strings vacíos
       const next = prev.slice();
       for (let i = prev.length; i < players; i += 1) {
-        next.push('');
+        next.push("");
       }
       return next;
     });
@@ -69,7 +105,7 @@ export default function App() {
 
   function updatePlayersUiText(nextText: string) {
     setTotalPlayersText(nextText);
-    const parsed = parseInt(nextText, 10);
+    const parsed = Number.parseInt(nextText, 10);
     const players = Number.isNaN(parsed)
       ? 0
       : Math.max(0, Math.min(20, Math.floor(parsed)));
@@ -78,7 +114,7 @@ export default function App() {
       if (prev.length > players) return prev.slice(0, players);
       const next = prev.slice();
       for (let i = prev.length; i < players; i += 1) {
-        next.push('');
+        next.push("");
       }
       return next;
     });
@@ -94,33 +130,33 @@ export default function App() {
 
   function startGame() {
     // Asegurar que usamos lo que está en los inputs, aunque no hayan hecho blur
-    const parsedPlayers = parseInt(totalPlayersText, 10);
+    const parsedPlayers = Number.parseInt(totalPlayersText, 10);
     if (Number.isNaN(parsedPlayers)) {
-      alert('Cantidad de jugadores inválida');
+      alert("Cantidad de jugadores inválida");
       return;
     }
     const players = Math.max(3, Math.min(20, Math.floor(parsedPlayers || 3)));
     if (players < 3) {
-      alert('Debe haber al menos 3 jugadores');
+      alert("Debe haber al menos 3 jugadores");
       return;
     }
     // actualizar estado derivado
     updatePlayersSafe(players);
 
-    const parsedImpostors = parseInt(totalImpostorsText, 10);
+    const parsedImpostors = Number.parseInt(totalImpostorsText, 10);
     if (Number.isNaN(parsedImpostors)) {
-      alert('Cantidad de impostores inválida');
+      alert("Cantidad de impostores inválida");
       return;
     }
     const impostors = clampImpostors(players, Math.floor(parsedImpostors || 1));
     if (impostors < 1 || impostors >= players) {
-      alert('Cantidad de impostores inválida');
+      alert("Cantidad de impostores inválida");
       return;
     }
     updateImpostorsSafe(impostors);
     const pool = remainingWords.length > 0 ? remainingWords : words;
     if (pool.length === 0) {
-      alert('Debes ingresar al menos una palabra');
+      alert("Debes ingresar al menos una palabra");
       return;
     }
 
@@ -139,230 +175,248 @@ export default function App() {
     setKeyword(selectedWord);
     setRemainingWords(pool.filter((_, i) => i !== randomIndex));
     setCurrentPlayer(0);
-    setScreen('blank');
+    setSelectedPlayerIndex(null);
+    setLastEliminatedIndex(null);
+    setAlivePlayers(Array.from({ length: players }, () => true));
+    setScreen("blank");
   }
 
   function showNextRole() {
     if (currentPlayer >= totalPlayers) {
-      setScreen('end');
+      setScreen("vote");
       return;
     }
-    setScreen('role');
+    setScreen("role");
   }
 
   function hideRole() {
     const next = currentPlayer + 1;
     setCurrentPlayer(next);
-    setScreen('blank');
+    setScreen("blank");
   }
 
   function resetGame() {
     setCurrentPlayer(0);
     setImpostorIndexes([]);
-    setKeyword('');
-    setScreen('setup');
+    setKeyword("");
+    setScreen("setup");
+    setSelectedPlayerIndex(null);
+    setLastEliminatedIndex(null);
+    setAlivePlayers([]);
   }
 
   function resetRemainingWords() {
     setRemainingWords([...words]);
   }
 
+  function resetConfiguration() {
+    const defaultPlayers = 5;
+    const defaultImpostors = 1;
+    const defaultNames = ["Ana", "Bruno", "Carla", "Diego", "Elena"];
+    const defaultWordList =
+      "Playa\nMontaña\nBosque\nCiudad\nEscuela\nHospital\nBiblioteca\nRestaurante";
+
+    setTotalPlayers(defaultPlayers);
+    setTotalPlayersText(String(defaultPlayers));
+    setTotalImpostors(defaultImpostors);
+    setTotalImpostorsText(String(defaultImpostors));
+    setPlayerNames(defaultNames);
+    setWordListText(defaultWordList);
+    setRemainingWords([]);
+    setSelectedPlayerIndex(null);
+    setLastEliminatedIndex(null);
+    setAlivePlayers([]);
+    setScreen("setup");
+  }
+
   const roleIsImpostor = impostorIndexes.includes(currentPlayer);
 
-  const textColorSubtle = 'rgba(255,255,255,0.85)';
+  const aliveCounts = useMemo(() => {
+    const aliveTotal = alivePlayers.reduce((acc, v) => acc + (v ? 1 : 0), 0);
+    const aliveImpostors = impostorIndexes.reduce(
+      (acc, idx) => acc + (alivePlayers[idx] ? 1 : 0),
+      0
+    );
+    const aliveNormals = aliveTotal - aliveImpostors;
+    return { aliveTotal, aliveImpostors, aliveNormals } as const;
+  }, [alivePlayers, impostorIndexes]);
+
+  const handleSelectPlayer = useCallback((index: number) => {
+    setSelectedPlayerIndex(index);
+  }, []);
+
+  const confirmElimination = useCallback(() => {
+    if (selectedPlayerIndex === null) return;
+    setAlivePlayers((prev) => {
+      if (!prev[selectedPlayerIndex]) return prev;
+      const next = prev.slice();
+      next[selectedPlayerIndex] = false;
+      return next;
+    });
+    setLastEliminatedIndex(selectedPlayerIndex);
+
+    // Evaluate win conditions after state update; compute using next values synchronously
+    const nextAliveImpostors = impostorIndexes.reduce(
+      (acc, idx) =>
+        acc +
+        ((idx === selectedPlayerIndex ? false : alivePlayers[idx]) ? 1 : 0),
+      0
+    );
+    const nextAliveTotal = alivePlayers.reduce(
+      (acc, v, idx) =>
+        acc + ((idx === selectedPlayerIndex ? false : v) ? 1 : 0),
+      0
+    );
+    const nextAliveNormals = nextAliveTotal - nextAliveImpostors;
+
+    if (nextAliveImpostors === 0) {
+      setScreen("winCrew");
+      return;
+    }
+    if (nextAliveImpostors === nextAliveNormals) {
+      setScreen("winImpostors");
+      return;
+    }
+    setScreen("reveal");
+  }, [selectedPlayerIndex, impostorIndexes, alivePlayers]);
+
+  const nextVotingRound = useCallback(() => {
+    setSelectedPlayerIndex(null);
+    setScreen("vote");
+  }, []);
+
+  const textColorSubtle = colors.textSubtle;
 
   const uiPlayersCount = (() => {
-    const parsed = parseInt(totalPlayersText, 10);
+    const parsed = Number.parseInt(totalPlayersText, 10);
     if (Number.isNaN(parsed)) return 0;
     return Math.max(0, Math.min(20, Math.floor(parsed)));
   })();
 
   return (
     <SafeAreaView style={screenContainerStyle}>
-      <StatusBar barStyle="light-content" />
-      <ScrollView contentContainerStyle={{ minHeight: '100%', padding: 16 }}>
-        <View style={{ maxWidth: 720, width: '100%', alignSelf: 'center' }}>
-          <View style={{ alignItems: 'center', marginBottom: 24 }}>
-            <Text style={{ fontSize: 32, fontWeight: '800', color: 'white', textAlign: 'center' }}>
-              🕵️ Juego de Impostores
-            </Text>
-            <Text style={{ fontSize: 14, color: textColorSubtle }}>
-              ¿Podrás descubrir quién es el impostor?
-            </Text>
-          </View>
+      <ScrollView >
+        <View style={{ width: "100%", alignSelf: "center", flex: 1, maxWidth: 720, padding: 16 }}>
+          <AppHeader />
 
-          {screen === 'setup' && (
-            <View style={cardStyle.card}>
-              <Text style={cardStyle.cardTitle}>Configuración</Text>
+          {screen === "setup" && (
+            <SetupCards
+              totalPlayersText={totalPlayersText}
+              onPlayersTextChange={updatePlayersUiText}
+              onPlayersBlur={() => {
+                const parsed = Number.parseInt(totalPlayersText, 10);
+                if (!Number.isNaN(parsed)) {
+                  updatePlayersSafe(parsed);
+                } else {
+                  setTotalPlayersText(String(totalPlayers));
+                }
+              }}
+              totalImpostorsText={totalImpostorsText}
+              onImpostorsTextChange={setTotalImpostorsText}
+              onImpostorsBlur={() => {
+                const parsed = Number.parseInt(totalImpostorsText, 10);
+                if (!Number.isNaN(parsed)) {
+                  updateImpostorsSafe(parsed);
+                } else {
+                  setTotalImpostorsText(String(totalImpostors));
+                }
+              }}
+              uiPlayersCount={uiPlayersCount}
+              playerNames={playerNames}
+              onPlayerNameChange={handlePlayerNameChange}
+              wordListText={wordListText}
+              onWordListChange={setWordListText}
+              availableWordsCount={remainingWords.length > 0 ? remainingWords.length : words.length}
+              totalImpostors={totalImpostors}
+              onResetConfiguration={resetConfiguration}
+              onStartGame={startGame}
+              inputStyle={inputStyle}
+              labelStyle={labelStyle}
+              playerNamesTitle={playerNamesTitle}
+              listaTitleStyle={listaTitleStyle}
+            />
+          )}
 
-              <View
-                style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}
-              >
-                <View style={{ flex: 1, marginRight: 8, marginBottom: 16 }}>
-                  <Text style={labelStyle}>Cantidad de jugadores</Text>
-                  <TextInput
-                    style={inputStyle}
-                    keyboardType={Platform.select({ ios: 'number-pad', android: 'numeric', default: 'numeric' })}
-                    value={totalPlayersText}
-                    onChangeText={(t) => updatePlayersUiText(t)}
-                    onBlur={() => {
-                      const parsed = parseInt(totalPlayersText, 10);
-                      if (!Number.isNaN(parsed)) {
-                        updatePlayersSafe(parsed);
-                      } else {
-                        // Si queda vacío o inválido, no forzamos valor hasta que el usuario lo corrija
-                        // pero para evitar estados inválidos al empezar el juego, se validará en startGame
-                        setTotalPlayersText(String(totalPlayers));
-                      }
-                    }}
-                  />
-                </View>
-                <View style={{ flex: 1, marginLeft: 8, marginBottom: 16 }}>
-                  <Text style={labelStyle}>Cantidad de impostores</Text>
-                  <TextInput
-                    style={inputStyle}
-                    keyboardType={Platform.select({ ios: 'number-pad', android: 'numeric', default: 'numeric' })}
-                    value={totalImpostorsText}
-                    onChangeText={(t) => {
-                      setTotalImpostorsText(t);
-                    }}
-                    onBlur={() => {
-                      const parsed = parseInt(totalImpostorsText, 10);
-                      if (!Number.isNaN(parsed)) {
-                        updateImpostorsSafe(parsed);
-                      } else {
-                        setTotalImpostorsText(String(totalImpostors));
-                      }
-                    }}
-                  />
-                </View>
-              </View>
+          {null}
 
-              <View style={{ marginBottom: 16 }}>
-                <Text style={labelStyle}>Nombres de jugadores</Text>
-                {Array.from({ length: uiPlayersCount }).map((_, i) => (
-                  <View key={i} style={{ marginBottom: 8 }}>
-                    <Text style={[labelStyle, { marginBottom: 4 }]}>Jugador {i + 1}</Text>
-                    <TextInput
-                      style={inputStyle}
-                      value={playerNames[i] || ''}
-                      onChangeText={(t) => handlePlayerNameChange(i, t)}
-                    />
-                  </View>
-                ))}
-              </View>
+          {screen === "role" && (
+            <RoleCard
+              roleIsImpostor={roleIsImpostor}
+              playerName={playerNames[currentPlayer] ? playerNames[currentPlayer] : `Jugador ${currentPlayer + 1}`}
+              keyword={keyword}
+              onNext={hideRole}
+            />
+          )}
 
-              <View style={{ marginBottom: 16 }}>
-                <Text style={labelStyle}>Lista de palabras clave (una por línea)</Text>
-                <TextInput
-                  style={[inputStyle, { minHeight: 120, textAlignVertical: 'top' }]}
-                  multiline
-                  value={wordListText}
-                  onChangeText={setWordListText}
-                />
-              </View>
-
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: 8,
-                }}
-              >
-                <Text style={{ color: textColorSubtle }}>
-                  Palabras restantes: {remainingWords.length > 0 ? remainingWords.length : words.length}
-                </Text>
-                <TouchableOpacity
-                  onPress={resetRemainingWords}
-                  activeOpacity={0.8}
+          {screen === "blank" && (
+            <Card style={{ flex: 1 }}>
+              <View style={{ alignItems: "center", paddingVertical: 16 }}>
+                <Icon name="phone" size={48} tintColor="#fff" />
+                <Text
                   style={{
-                    backgroundColor: 'transparent',
-                    borderWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.3)',
-                    paddingVertical: 8,
-                    paddingHorizontal: 12,
-                    borderRadius: 6,
+                    fontSize: 22,
+                    fontWeight: "800",
+                    color: "white",
+                    marginBottom: 8,
                   }}
                 >
-                  <Text style={{ color: 'white', fontWeight: '600' }}>Reiniciar palabras</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={{ flexDirection: 'row', justifyContent: 'center', marginVertical: 8, flexWrap: 'wrap' }}>
-                <Text style={{ color: textColorSubtle }}>👥 {uiPlayersCount} jugadores</Text>
-                <Text style={{ color: textColorSubtle, marginLeft: 12 }}>⚠️ {totalImpostors} {totalImpostors === 1 ? 'impostor' : 'impostores'}</Text>
-              </View>
-
-              <PrimaryButton label="▶️ Comenzar Juego" onPress={startGame} />
-            </View>
-          )}
-
-          {screen === 'role' && (
-            <View style={cardStyle.card}>
-              <View style={{ alignItems: 'center', paddingVertical: 16 }}>
-                <Text style={{ color: 'white', marginBottom: 12 }}>
-                  {playerNames[currentPlayer] ? playerNames[currentPlayer] : `Jugador ${currentPlayer + 1}`}
+                  Pasa el dispositivo
                 </Text>
-
-                {roleIsImpostor ? (
-                  <View style={{ alignItems: 'center' }}>
-                    <Text style={{ fontSize: 48, marginBottom: 12 }}>🎭</Text>
-                    <Text style={{ fontSize: 22, fontWeight: '800', marginBottom: 8, color: '#ff4757' }}>IMPOSTOR</Text>
-                    <Text style={{ color: textColorSubtle, fontSize: 14, textAlign: 'center' }}>
-                      No conoces la palabra clave. ¡Trata de descubrirla!
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={{ alignItems: 'center' }}>
-                    <Text style={{ fontSize: 48, marginBottom: 12 }}>🕵️</Text>
-                    <Text style={{ fontSize: 22, fontWeight: '800', marginBottom: 8, color: '#2ed573' }}>JUGADOR</Text>
-                    <Text style={{ color: textColorSubtle, marginBottom: 8 }}>Palabra clave:</Text>
-                    <Text style={{ fontSize: 22, fontWeight: '800', color: '#ffd700', textAlign: 'center', marginBottom: 8 }}>{keyword}</Text>
-                    <Text style={{ color: textColorSubtle, fontSize: 14, textAlign: 'center' }}>
-                      ¡Describe esta palabra sin mencionarla!
-                    </Text>
-                  </View>
-                )}
-
-                <PrimaryButton label="👁️ Siguiente" onPress={hideRole} />
-              </View>
-            </View>
-          )}
-
-          {screen === 'blank' && (
-            <View style={cardStyle.card}>
-              <View style={{ alignItems: 'center', paddingVertical: 16 }}>
-                <Text style={{ fontSize: 48, marginBottom: 12 }}>📱</Text>
-                <Text style={{ fontSize: 22, fontWeight: '800', color: 'white', marginBottom: 8 }}>Pasa el dispositivo</Text>
                 <Text style={{ color: textColorSubtle, marginBottom: 12 }}>
                   {currentPlayer < totalPlayers
-                    ? `Entrega el dispositivo a ${playerNames[currentPlayer] || `Jugador ${currentPlayer + 1}`}`
-                    : 'Todos los jugadores han visto su rol'}
+                    ? `Entrega el dispositivo a ${
+                        playerNames[currentPlayer] ||
+                        `Jugador ${currentPlayer + 1}`
+                      }`
+                    : "Todos los jugadores han visto su rol"}
                 </Text>
-                <PrimaryButton label="👁️ Ver mi rol" onPress={showNextRole} />
+                <PrimaryButton
+                  label="Ver mi rol"
+                  onPress={showNextRole}
+                  leftIcon="eye"
+                />
               </View>
-            </View>
+            </Card>
           )}
 
-          {screen === 'end' && (
-            <View style={cardStyle.card}>
-              <View style={{ alignItems: 'center', paddingVertical: 16 }}>
-                <Text style={{ fontSize: 48, marginBottom: 12 }}>🎉</Text>
-                <Text style={{ fontSize: 22, fontWeight: '800', color: 'white', marginBottom: 8 }}>
-                  ¡Todos tienen su rol!
-                </Text>
-                <Text style={{ fontSize: 14, color: textColorSubtle, marginBottom: 12 }}>
-                  ¡A jugar!
-                </Text>
+          {screen === "vote" && (
+            <VoteScreen
+              playerNames={playerNames}
+              alivePlayers={alivePlayers}
+              selectedIndex={selectedPlayerIndex}
+              onSelect={handleSelectPlayer}
+              onConfirm={confirmElimination}
+            />
+          )}
 
-                <Text style={{ color: 'white', marginBottom: 8 }}>
-                  {totalPlayers - totalImpostors} Jugadores • {totalImpostors} {totalImpostors === 1 ? 'Impostor' : 'Impostores'}
-                </Text>
+          {screen === "reveal" && lastEliminatedIndex !== null && (
+            <RevealScreen
+              playerName={
+                playerNames[lastEliminatedIndex] ||
+                `Jugador ${lastEliminatedIndex + 1}`
+              }
+              wasImpostor={impostorIndexes.includes(lastEliminatedIndex)}
+              aliveImpostors={aliveCounts.aliveImpostors}
+              aliveNormals={aliveCounts.aliveNormals}
+              onNextRound={nextVotingRound}
+              onNewGame={resetGame}
+            />
+          )}
 
-                <SecondaryButton label="🔄 Nuevo Juego" onPress={resetGame} />
-              </View>
-            </View>
+          {screen === "winImpostors" && (
+            <WinScreen
+              title="¡Ganaron los impostores!"
+              subtitle={`Impostores: ${aliveCounts.aliveImpostors} • Tripulantes: ${aliveCounts.aliveNormals}`}
+              onNewGame={resetGame}
+            />
+          )}
+
+          {screen === "winCrew" && (
+            <WinScreen
+              title="¡Ganan los jugadores normales!"
+              subtitle={`Impostores: ${aliveCounts.aliveImpostors} • Tripulantes: ${aliveCounts.aliveNormals}`}
+              onNewGame={resetGame}
+            />
           )}
         </View>
       </ScrollView>
@@ -371,85 +425,44 @@ export default function App() {
 }
 
 const cardStyle = {
-  card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: 600,
-    marginBottom: 16,
-  } as const,
   cardTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 12,
+    fontSize: 24,
+    fontWeight: "700",
+    color: "white",
+    lineHeight: 36,
   } as const,
 };
 
-const labelStyle = {
-  fontWeight: '600',
+const playerNamesTitle = {
+  fontSize: 18,
+  fontWeight: "600",
+  color: "white",
   marginBottom: 8,
-  color: 'rgba(255,255,255,0.9)',
+} as const;
+
+const labelStyle = {
+  marginBottom: 8,
+  fontWeight: "600",
+  color: "white",
+} as const;
+
+const listaTitleStyle = {
+  fontSize: 16,
+  color: "white",
+  fontWeight: "600",
 } as const;
 
 const inputStyle = {
-  width: '100%',
+  width: "100%",
   padding: 12,
   fontSize: 16,
   borderWidth: 2,
-  borderColor: 'rgba(255,255,255,0.2)',
+  borderColor: "rgba(255,255,255,0.2)",
   borderRadius: 12,
-  backgroundColor: 'rgba(255,255,255,0.1)',
-  color: 'white',
+  backgroundColor: "rgba(255,255,255,0.1)",
+  color: "white",
 } as const;
 
 // Removed extra decorative styles to keep the UI minimal across platforms
 
-function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.8}
-      style={{
-        backgroundColor: '#45a049',
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-        alignSelf: 'center',
-        minWidth: 200,
-        marginTop: 8,
-      }}
-    >
-      <Text style={{ color: 'white', fontWeight: '600', fontSize: 16, textAlign: 'center' }}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-function SecondaryButton({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.8}
-      style={{
-        backgroundColor: 'transparent',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.3)',
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-        alignSelf: 'center',
-        minWidth: 200,
-        marginTop: 8,
-      }}
-    >
-      <Text style={{ color: 'white', fontWeight: '600', fontSize: 16, textAlign: 'center' }}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-
+// local styles kept for labels/inputs

@@ -1,14 +1,37 @@
 {
   "expo": {
-    "name": "Impostor",
-    "slug": "impostor",
+    "name": "el-impostor",
+    "slug": "el-impostor",
     "scheme": "impostor",
     "version": "1.0.0",
     "orientation": "portrait",
-    "platforms": ["ios", "android", "web"],
-    "ios": { "supportsTablet": true },
-    "android": {},
-    "web": { "name": "🕵️ Juego de Impostores", "bundler": "metro" }
+    "icon": "./assets/logo.png",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.matingb.impostor"
+    },
+    "android": {
+      "package": "com.matingb.impostor"
+    },
+    "web": {
+      "favicon": "./assets/logo.png",
+      "name": "Juego de Impostores",
+      "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "54c154b7-301b-47ba-8a1f-fa7d0f9dc1d6"
+      }
+    }
   }
 }
-
