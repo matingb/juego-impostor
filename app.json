@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "el-impostor",
+    "name": "El Impostor",
     "slug": "el-impostor",
     "scheme": "impostor",
     "version": "1.0.0",
@@ -32,6 +32,9 @@
       "eas": {
         "projectId": "54c154b7-301b-47ba-8a1f-fa7d0f9dc1d6"
       }
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

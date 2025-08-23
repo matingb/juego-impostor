@@ -1,11 +1,12 @@
 import React from "react"
-import { Platform, Text, TextInput, View, ViewStyle, TextStyle } from "react-native"
+import { Platform, Text, View, ViewStyle, TextStyle } from "react-native"
 import { Card } from "./Card"
 import { PrimaryButton } from "./PrimaryButton"
 import { SecondaryButton } from "./SecondaryButton"
 import { Icon } from "./Icon"
 import { Ionicons } from "@expo/vector-icons"
 import { colors, COLOR } from "../theme"
+import TextInput from "./TextInput"
 
 type RNStyle = ViewStyle | TextStyle
 
@@ -25,8 +26,6 @@ export function SetupCards({
   totalImpostors,
   onResetConfiguration,
   onStartGame,
-  inputStyle,
-  labelStyle,
   playerNamesTitle,
   listaTitleStyle,
 }: {
@@ -45,8 +44,6 @@ export function SetupCards({
   totalImpostors: number
   onResetConfiguration: () => void
   onStartGame: () => void
-  inputStyle: RNStyle
-  labelStyle: RNStyle
   playerNamesTitle: RNStyle
   listaTitleStyle: RNStyle
 }) {
@@ -60,23 +57,21 @@ export function SetupCards({
 
         <View style={style.twoColsRow}>
           <View style={style.columnSpacingRight}>
-            <Text style={labelStyle as TextStyle}>Cantidad de jugadores</Text>
             <TextInput
-              style={inputStyle as ViewStyle}
               keyboardType={Platform.select({ ios: "number-pad", android: "numeric", default: "numeric" })}
               value={totalPlayersText}
               onChangeText={onPlayersTextChange}
               onBlur={onPlayersBlur}
+              placeholder="Cantidad de jugadores"
             />
           </View>
           <View style={style.columnSpacingLeft}>
-            <Text style={labelStyle as TextStyle}>Cantidad de impostores</Text>
             <TextInput
-              style={inputStyle as ViewStyle}
               keyboardType={Platform.select({ ios: "number-pad", android: "numeric", default: "numeric" })}
               value={totalImpostorsText}
               onChangeText={onImpostorsTextChange}
               onBlur={onImpostorsBlur}
+              placeholder="Cantidad de impostores"
             />
           </View>
         </View>
@@ -85,11 +80,10 @@ export function SetupCards({
           <Text style={playerNamesTitle as TextStyle}>Nombres de jugadores</Text>
           {Array.from({ length: uiPlayersCount }).map((_, i) => (
             <View key={i} style={style.playerRow}>
-              <Text style={labelStyle as TextStyle}>Jugador {i + 1}</Text>
               <TextInput
-                style={inputStyle as ViewStyle}
-                value={playerNames[i] || ""}
+                value={playerNames[i]}
                 onChangeText={(t) => onPlayerNameChange(i, t)}
+                placeholder={`Jugador ${i + 1}`}
               />
             </View>
           ))}
@@ -103,7 +97,7 @@ export function SetupCards({
             </View>
           </View>
           <TextInput
-            style={[inputStyle as ViewStyle, style.wordListInput]}
+            style={style.wordListInput}
             multiline
             value={wordListText}
             onChangeText={onWordListChange}
@@ -162,10 +156,8 @@ export const style = {
   blockSpacing: { marginBottom: 16 },
   playerRow: { marginBottom: 8 },
   listHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     paddingVertical: 8,
+    gap: 8,
   },
   chip: {
     backgroundColor: "rgba(69,160,73,0.25)",
@@ -174,6 +166,7 @@ export const style = {
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 999,
+    alignSelf: "flex-start",
   },
   chipText: { color: "white", fontWeight: "600" },
   wordListInput: { minHeight: 120, textAlignVertical: "top" },

@@ -30,17 +30,11 @@ function clampImpostors(totalPlayers: number, impostors: number): number {
 }
 
 export default function App() {
-  const [totalPlayers, setTotalPlayers] = useState<number>(5);
-  const [totalPlayersText, setTotalPlayersText] = useState<string>("5");
+  const [totalPlayers, setTotalPlayers] = useState<number>(3);
+  const [totalPlayersText, setTotalPlayersText] = useState<string>("3");
   const [totalImpostors, setTotalImpostors] = useState<number>(1);
   const [totalImpostorsText, setTotalImpostorsText] = useState<string>("1");
-  const [playerNames, setPlayerNames] = useState<string[]>([
-    "Ana",
-    "Bruno",
-    "Carla",
-    "Diego",
-    "Elena",
-  ]);
+  const [playerNames, setPlayerNames] = useState<string[]>([]);
   const [wordListText, setWordListText] = useState<string>(
     "Playa\nMontaña\nBosque\nCiudad\nEscuela\nHospital\nBiblioteca\nRestaurante"
   );
@@ -330,7 +324,6 @@ export default function App() {
               totalImpostors={totalImpostors}
               onResetConfiguration={resetConfiguration}
               onStartGame={startGame}
-              inputStyle={inputStyle}
               labelStyle={labelStyle}
               playerNamesTitle={playerNamesTitle}
               listaTitleStyle={listaTitleStyle}
@@ -452,17 +445,3 @@ const listaTitleStyle = {
   fontWeight: "600",
 } as const;
 
-const inputStyle = {
-  width: "100%",
-  padding: 12,
-  fontSize: 16,
-  borderWidth: 2,
-  borderColor: "rgba(255,255,255,0.2)",
-  borderRadius: 12,
-  backgroundColor: "rgba(255,255,255,0.1)",
-  color: "white",
-} as const;
-
-// Removed extra decorative styles to keep the UI minimal across platforms
-
-// local styles kept for labels/inputs
